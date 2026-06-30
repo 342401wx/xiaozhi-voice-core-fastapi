@@ -1,0 +1,265 @@
+{
+  "info": {
+    "_postman_id": "62f9e6d0-9dbd-475b-9a8a-3cbf735da9cf",
+    "name": "Xiaozhi Voice Core API",
+    "description": "FastAPI service for extracted Xiaozhi ASR + LLM + TTS core. Import the environment file and start uvicorn before sending requests.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Health Check",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}/health",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "health"
+          ]
+        },
+        "description": "Check service config, dependencies, LLM key status, ASR model directory and TTS voice."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Text JSON",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "",
+              "const json = pm.response.json();",
+              "pm.test(\"Response has answer_text\", function () {",
+              "    pm.expect(json.answer_text).to.be.a(\"string\").and.not.empty;",
+              "});",
+              "",
+              "if (json.audio_url) {",
+              "    pm.environment.set(\"audio_url\", json.audio_url);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"你好，用一句话介绍你自己\",\n  \"return_audio\": true,\n  \"include_audio_base64\": false,\n  \"session_id\": \"{{session_id}}\",\n  \"history\": []\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "Text input. Returns answer_text and audio_url when return_audio=true."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Text JSON With History",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const json = pm.response.json();",
+              "if (json.audio_url) {",
+              "    pm.environment.set(\"audio_url\", json.audio_url);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"那你刚才说你叫什么？\",\n  \"return_audio\": true,\n  \"include_audio_base64\": false,\n  \"session_id\": \"{{session_id}}\",\n  \"history\": [\n    {\n      \"role\": \"user\",\n      \"content\": \"你好，用一句话介绍你自己\"\n    },\n    {\n      \"role\": \"assistant\",\n      \"content\": \"你好，我是小智语音助手，可以和你进行文本与语音问答。\"\n    }\n  ]\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "Text input with dialogue history. The service keeps only the last 20 valid user/assistant messages from history."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Text JSON Include Audio Base64",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"text\": \"请用很短的一句话回答：今天天气不错吗？\",\n  \"return_audio\": true,\n  \"include_audio_base64\": true,\n  \"voice\": \"{{tts_voice}}\",\n  \"session_id\": \"{{session_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "Returns audio_base64 together with audio_url. Use this when the client cannot perform a second request to download audio."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Audio Base64 JSON",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"audio_base64\": \"UklGRiQAAABXQVZFZm10IBAAAAABAAEA...\",\n  \"audio_filename\": \"question.wav\",\n  \"audio_content_type\": \"audio/wav\",\n  \"text\": \"请简短回答\",\n  \"return_audio\": true,\n  \"include_audio_base64\": false,\n  \"session_id\": \"{{session_id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "ASR from Base64 audio. Replace audio_base64 with a real wav/mp3/m4a/webm base64 string. Requires FunASR dependency and model."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Audio Multipart",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            {
+              "key": "audio",
+              "type": "file",
+              "src": "{{audio_file_path}}"
+            },
+            {
+              "key": "text",
+              "value": "请简短回答",
+              "type": "text"
+            },
+            {
+              "key": "return_audio",
+              "value": "true",
+              "type": "text"
+            },
+            {
+              "key": "include_audio_base64",
+              "value": "false",
+              "type": "text"
+            },
+            {
+              "key": "session_id",
+              "value": "{{session_id}}",
+              "type": "text"
+            }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "Upload an audio file through multipart/form-data. In Postman, select a real local file in the audio field before sending. Requires FunASR dependency and model."
+      },
+      "response": []
+    },
+    {
+      "name": "Get Generated Audio",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{base_url}}{{audio_url}}",
+          "host": [
+            "{{base_url}}{{audio_url}}"
+          ]
+        },
+        "description": "Download or preview the generated audio. Run Ask - Text JSON first so the test script stores audio_url in the environment."
+      },
+      "response": []
+    },
+    {
+      "name": "Ask - Missing Input Error Example",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json; charset=utf-8"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"return_audio\": false\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/ask",
+          "host": [
+            "{{base_url}}"
+          ],
+          "path": [
+            "ask"
+          ]
+        },
+        "description": "Expected status: 400. Demonstrates the common error response format."
+      },
+      "response": []
+    }
+  ]
+}
