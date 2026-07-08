@@ -1,0 +1,254 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html, body { width: 100%; height: 100%; overflow: hidden; }
+body {
+  background: #111;
+}
+#background-container {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background-image: url('/live2d/images/1.png');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  transition: background-image .5s ease-in-out;
+  z-index: 0;
+}
+#background-container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, .3);
+}
+#live2d-stage {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+#live2d-stage.hidden {
+  display: none;
+}
+#live2d-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+#mmd-stage {
+  display: none;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  z-index: 1;
+}
+#mmd-stage.active {
+  display: block;
+}
+#mmd-stage canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+#live2d-loading {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: #888;
+  font-size: 14px;
+  font-weight: 600;
+  font-family: system-ui, sans-serif;
+  z-index: 2;
+}
+#live2d-loading.error { color: #c44; text-align: center; }
+</style>
+</head>
+<body>
+<div id="background-container" aria-hidden="true"></div>
+<div id="live2d-stage">
+  <canvas id="live2d-canvas"></canvas>
+</div>
+<div id="mmd-stage"></div>
+<div id="live2d-loading">加载 Live2D 模型中...</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script src="/static/live2d/pixi.js"></script>
+<script src="/static/live2d/live2dcubismcore.min.js"></script>
+<script src="/static/live2d/cubism4.min.js"></script>
+<script>
+(function() {
+  window.PIXI = PIXI;
+
+  var MODEL_MAP = {
+    'hiyori_pro_zh': 'hiyori_pro_t11.model3.json',
+    'natori_pro_zh': 'natori_pro_t06.model3.json'
+  };
+  var BASE_PATH = '/live2d/resources/';
+  var MODEL_LAYOUT = {
+    hiyori_pro_zh: { width: 1.08, height: 1.00, top: 18, bottom: 10 },
+    natori_pro_zh: { width: 0.90, height: 0.96, top: 16, bottom: 10 }
+  };
+  var live2dApp = null;
+  var live2dModel = null;
+  var mmdViewer = null;
+  var pendingMmdModule = null;
+  var currentModelName = 'hiyori_pro_zh';
+
+  function isMmdModel(modelName) {
+    return modelName === 'hutao_mmd';
+  }
+
+  function showLoading(text, isError) {
+    var loading = document.getElementById('live2d-loading');
+    if (!loading) return;
+    loading.className = isError ? 'error' : '';
+    loading.style.display = 'block';
+    loading.textContent = text || '加载模型中...';
+  }
+
+  function hideLoading() {
+    var loading = document.getElementById('live2d-loading');
+    if (loading) loading.style.display = 'none';
+  }
+
+  function setLive2DVisible(visible) {
+    var stage = document.getElementById('live2d-stage');
+    if (stage) stage.classList.toggle('hidden', !visible);
+  }
+
+  async function getMmdViewer() {
+    if (mmdViewer) return mmdViewer;
+    if (!pendingMmdModule) {
+      pendingMmdModule = import('/live2d/js/mmd/mmd-viewer.js?v=0235');
+    }
+    var module = await pendingMmdModule;
+    mmdViewer = new module.MMDViewer(document.getElementById('mmd-stage'));
+    window.__mmdViewer = mmdViewer;
+    return mmdViewer;
+  }
+
+  async function loadMmdModel(modelName) {
+    currentModelName = modelName;
+    setLive2DVisible(false);
+    showLoading('加载胡桃模型中...');
+
+    if (live2dModel) {
+      live2dApp.stage.removeChild(live2dModel);
+      live2dModel.destroy();
+      live2dModel = null;
+    }
+
+    try {
+      var viewer = await getMmdViewer();
+      await viewer.init('/live2d/resources/hutao_mmd/kqsht/hutao.pmx', {
+        idleMotionUrl: '/live2d/resources/hutao_mmd/motions/hutao_idle_qiuqiuyao.vmd',
+        idleAudioUrl: '/live2d/resources/hutao_mmd/audio/hutao_qiuqiuyao_zh.ogg',
+        idleDelayMs: 12000
+      });
+      hideLoading();
+    } catch (err) {
+      console.error('MMD load error:', err);
+      showLoading('胡桃模型加载失败：' + err, true);
+    }
+  }
+
+  function positionModel(model, modelName) {
+    var layout = MODEL_LAYOUT[modelName] || MODEL_LAYOUT.hiyori_pro_zh;
+    var top = layout.top || 14;
+    var bottom = layout.bottom || 10;
+    model.scale.set(1);
+    var rawWidth = model.width || (model.internalModel && model.internalModel.width) || 1;
+    var rawHeight = model.height || (model.internalModel && model.internalModel.height) || 1;
+    var maxVisibleHeight = Math.max(1, live2dApp.screen.height - top - bottom);
+    var s = Math.min(
+      (live2dApp.screen.width * layout.width) / rawWidth,
+      (maxVisibleHeight * layout.height) / rawHeight
+    );
+    model.scale.set(s);
+    model.x = (live2dApp.screen.width - model.width) / 2;
+    model.y = Math.max(top, live2dApp.screen.height - model.height - bottom);
+  }
+
+  function loadModel(modelName) {
+    if (isMmdModel(modelName)) {
+      loadMmdModel(modelName);
+      return;
+    }
+
+    var modelFile = MODEL_MAP[modelName];
+    if (!modelFile) return;
+
+    setLive2DVisible(true);
+    if (mmdViewer) mmdViewer.hide();
+
+    if (live2dModel) {
+      live2dApp.stage.removeChild(live2dModel);
+      live2dModel.destroy();
+      live2dModel = null;
+    }
+
+    showLoading('加载模型中...');
+
+    currentModelName = modelName;
+    var modelPath = BASE_PATH + modelName + '/runtime/' + modelFile;
+    PIXI.live2d.Live2DModel.from(modelPath).then(function(model) {
+      live2dModel = model;
+      live2dApp.stage.addChild(model);
+      positionModel(model, modelName);
+      hideLoading();
+    }).catch(function(err) {
+      console.error('Live2D load error:', err);
+      showLoading('模型加载失败：' + err, true);
+    });
+  }
+
+  window.switchLive2DModel = function(modelName) {
+    if (live2dApp) loadModel(modelName);
+  };
+
+  var stageEl = document.getElementById('live2d-stage');
+  live2dApp = new PIXI.Application({
+    view: document.getElementById('live2d-canvas'),
+    height: window.innerHeight,
+    width: window.innerWidth,
+    resolution: window.devicePixelRatio || 1,
+    autoDensity: true,
+    antialias: true,
+    backgroundAlpha: 0
+  });
+
+  var params = new URLSearchParams(window.location.search);
+  var initialModel = params.get('model') || 'hiyori_pro_zh';
+  if (!MODEL_MAP[initialModel] && !isMmdModel(initialModel)) initialModel = 'hiyori_pro_zh';
+  loadModel(initialModel);
+
+  window.addEventListener('resize', function() {
+    live2dApp.renderer.resize(window.innerWidth, window.innerHeight);
+    if (live2dModel) positionModel(live2dModel, currentModelName);
+    if (mmdViewer) mmdViewer.resize();
+  });
+
+  window.addEventListener('message', function(e) {
+    if (e.data && e.data.type === 'switchModel' && e.data.model) {
+      loadModel(e.data.model);
+    }
+  });
+})();
+</script>
+</body>
+</html>
+
+
+
+
