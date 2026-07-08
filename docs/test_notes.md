@@ -11,9 +11,9 @@
 | 前端地址 | `http://127.0.0.1:7860` |
 | 后端地址 | `http://127.0.0.1:8010` |
 | 前端入口 | `app.py` |
-| 后端入口 | `小智ESP32提取/voice-core/fastapi_app.py` |
+| 后端入口 | `services/voice_core/fastapi_app.py` |
 | 数据库 | `xiaole_users.sqlite3` |
-| 知识库 | `a3_seachat_backend/enterprise_service_desk_knowledge_base.json` |
+| 知识库 | `services/knowledge_base/enterprise_service_desk_knowledge_base.json` |
 | 角色 | 小乐、名取同学、胡桃小朋友 |
 
 ## 3. 基础功能测试

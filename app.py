@@ -25,6 +25,14 @@ from fastapi.responses import HTMLResponse, PlainTextResponse, RedirectResponse,
 from fastapi.staticfiles import StaticFiles
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent
+SERVICES_DIR = PROJECT_ROOT / "services"
+ASSETS_DIR = PROJECT_ROOT / "assets"
+VOICE_CORE_DIR = SERVICES_DIR / "voice_core"
+WEB_STATIC_DIR = ASSETS_DIR / "web_static"
+DIGITAL_HUMAN_DIR = ASSETS_DIR / "digital_human"
+
+
 APP_CSS = """
 :root {
   --surface: #edf6f2;
@@ -1818,10 +1826,10 @@ WELCOME_MESSAGES: list[dict[str, str]] = [
 
 VOICE_CORE_ENDPOINT = os.getenv("VOICE_CORE_ENDPOINT", "http://127.0.0.1:8010/ask")
 VOICE_CORE_TTS_ENDPOINT = os.getenv("VOICE_CORE_TTS_ENDPOINT", "http://127.0.0.1:8010/tts")
-VOICE_CORE_AUDIO_DIR = Path(__file__).parent / "小智ESP32提取" / "voice-core" / "tmp" / "fastapi_audio"
-USER_AVATAR_DIR = Path(__file__).parent / "static" / "user_avatars"
+VOICE_CORE_AUDIO_DIR = VOICE_CORE_DIR / "tmp" / "fastapi_audio"
+USER_AVATAR_DIR = WEB_STATIC_DIR / "user_avatars"
 DEFAULT_USER_AVATAR = "/static/avatars/user.svg"
-DEFAULT_USER_AVATAR_PATH = Path(__file__).parent / "static" / "avatars" / "user.svg"
+DEFAULT_USER_AVATAR_PATH = WEB_STATIC_DIR / "avatars" / "user.svg"
 
 
 def resolve_voice_core_audio_path(audio_url: str | None) -> str | None:
@@ -1833,7 +1841,7 @@ def resolve_voice_core_audio_path(audio_url: str | None) -> str | None:
     audio_path = VOICE_CORE_AUDIO_DIR / filename
     return str(audio_path) if audio_path.exists() else None
 
-# ── 角色档案（移植自小乐 digital-human / manager-web） ─────
+# ── 角色档案（数字人角色配置） ─────
 CHARACTER_PROFILES: dict[str, dict[str, Any]] = {
     "小乐（默认助手）": {
         "name": "小乐",
@@ -1971,7 +1979,7 @@ def build_character_card(name: str) -> str:
     )
 
 
-# Live2D 角色名映射（移植自小乐 digital-human live2d.js）
+# Live2D 角色名映射
 LIVE2D_MODEL_MAP = {
     "小乐（默认助手）": "hiyori_pro_zh",
     "名取同学": "natori_pro_zh",
@@ -3012,7 +3020,7 @@ def static_file_url(path: str | None) -> str | None:
         return None
     if value.startswith("/static/"):
         return value
-    static_root = (Path(__file__).parent / "static").resolve()
+    static_root = WEB_STATIC_DIR.resolve()
     try:
         resolved = Path(value).resolve()
         relative = resolved.relative_to(static_root)
@@ -3026,7 +3034,7 @@ def static_url_to_path(value: str | None) -> str | None:
     if not raw:
         return None
     if raw.startswith("/static/"):
-        candidate = Path(__file__).parent / "static" / raw.removeprefix("/static/")
+        candidate = WEB_STATIC_DIR / raw.removeprefix("/static/")
     else:
         candidate = Path(raw)
     try:
@@ -3041,7 +3049,7 @@ def character_avatar_url(char_name: str = DEFAULT_CHARACTER) -> str:
 
 
 def character_avatar_path(char_name: str = DEFAULT_CHARACTER) -> str:
-    return static_url_to_path(character_avatar_url(char_name)) or str(Path(__file__).parent / "static" / "avatars" / "xiaozhi.svg")
+    return static_url_to_path(character_avatar_url(char_name)) or str(WEB_STATIC_DIR / "avatars" / "xiaozhi.svg")
 
 
 def default_user_profile(username: str | None) -> dict[str, str]:
@@ -3278,10 +3286,9 @@ def auth_redirect() -> RedirectResponse:
 
 api = FastAPI(title="小乐 Gradio Mock API")
 init_auth_db()
-api.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
-_XIAOZHI_DH = Path(__file__).parent / "xiaozhi-esp32-server" / "main" / "digital-human"
-if _XIAOZHI_DH.is_dir():
-    api.mount("/live2d", StaticFiles(directory=_XIAOZHI_DH), name="live2d")
+api.mount("/static", StaticFiles(directory=WEB_STATIC_DIR), name="static")
+if DIGITAL_HUMAN_DIR.is_dir():
+    api.mount("/live2d", StaticFiles(directory=DIGITAL_HUMAN_DIR), name="live2d")
 
 
 @api.middleware("http")
@@ -3377,7 +3384,7 @@ def logout(request: Request) -> Response:
 
 @api.get("/live2d-viewer")
 def live2d_viewer_page() -> Any:
-    html_path = Path(__file__).parent / "static" / "live2d-viewer.html"
+    html_path = WEB_STATIC_DIR / "live2d-viewer.html"
     return HTMLResponse(html_path.read_text(encoding="utf-8"))
 
 

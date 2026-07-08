@@ -1,4 +1,4 @@
-# 小乐语音核心 FastAPI 接口文档
+﻿# 小乐语音核心 FastAPI 接口文档
 
 ## 1. 文档信息
 
@@ -16,7 +16,7 @@
 在项目目录执行：
 
 ```powershell
-cd D:\桌面\zuoye\pbl作业\小智ESP32提取\voice-core
+cd D:\桌面\zuoye\pbl作业\services\voice_core
 python -m uvicorn fastapi_app:app --host 0.0.0.0 --port 8010
 ```
 
@@ -44,8 +44,8 @@ python -m pip install -r requirements-fastapi.txt
 服务会依次读取以下 `.env` 文件：
 
 1. `D:\桌面\zuoye\pbl作业\.env`
-2. `D:\桌面\zuoye\pbl作业\小智ESP32提取\.env`
-3. `D:\桌面\zuoye\pbl作业\小智ESP32提取\voice-core\.env`
+2. `D:\桌面\zuoye\pbl作业\services\voice_core\.env`
+
 
 推荐变量：
 
@@ -138,7 +138,7 @@ Invoke-RestMethod -Uri "http://127.0.0.1:8010/health" -Method Get
   },
   "details": {
     "llm_api_key_configured": true,
-    "asr_model_dir": "D:\\桌面\\zuoye\\pbl作业\\小智ESP32提取\\voice-core\\models\\SenseVoiceSmall",
+    "asr_model_dir": "D:\\桌面\\zuoye\\pbl作业\\services\\voice_core\\models\\SenseVoiceSmall",
     "asr_model_dir_exists": false,
     "tts_voice": "zh-CN-XiaoxiaoNeural"
   }

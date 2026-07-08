@@ -1,4 +1,4 @@
-# 小乐语音核心 FastAPI 服务部署指南
+﻿# 小乐语音核心 FastAPI 服务部署指南
 
 本项目是小乐语音助手的核心问答服务，基于 ESP32 语音后端链路提取，并新增了 FastAPI HTTP 接口。它可以提供：
 
@@ -21,7 +21,7 @@ http://127.0.0.1:8010
 ## 1. 项目结构
 
 ```text
-voice-core/
+services/voice_core/
 ├─ fastapi_app.py                         # FastAPI 服务入口
 ├─ requirements-fastapi.txt               # FastAPI 最小运行依赖
 ├─ .env.example                           # 环境变量示例，不包含真实 key
@@ -98,7 +98,7 @@ README_提取说明.md
 进入项目目录：
 
 ```powershell
-cd D:\桌面\zuoye\pbl作业\小智ESP32提取\voice-core
+cd D:\桌面\zuoye\pbl作业\services\voice_core
 ```
 
 安装 FastAPI 服务依赖：
@@ -149,8 +149,8 @@ D:\桌面\zuoye\pbl作业\.env
 服务读取 `.env` 的优先顺序：
 
 1. `D:\桌面\zuoye\pbl作业\.env`
-2. `D:\桌面\zuoye\pbl作业\小智ESP32提取\.env`
-3. `D:\桌面\zuoye\pbl作业\小智ESP32提取\voice-core\.env`
+2. `D:\桌面\zuoye\pbl作业\services\voice_core\.env`
+
 
 后读取的文件会覆盖占位值，所以当前目录 `.env` 更适合放本服务专用配置。
 

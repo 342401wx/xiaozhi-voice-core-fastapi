@@ -8,9 +8,9 @@ from pathlib import Path
 from typing import Any
 
 
-PROJECT_ROOT = Path(__file__).resolve().parent
-PBL_ROOT = PROJECT_ROOT.parent.parent
-DEFAULT_KB_PATH = PBL_ROOT / "a3_seachat_backend" / "enterprise_service_desk_knowledge_base.json"
+VOICE_CORE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = VOICE_CORE_DIR.parent.parent
+DEFAULT_KB_PATH = PROJECT_ROOT / "services" / "knowledge_base" / "enterprise_service_desk_knowledge_base.json"
 
 COLLECTION_LABELS = {
     "it_service_knowledge": "IT服务支持",

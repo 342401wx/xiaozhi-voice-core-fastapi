@@ -234,7 +234,7 @@ curl -X POST "http://127.0.0.1:7860/mock/voice-chat" \
 已通过脚本验证 ASR/TTS 能力：
 
 ```powershell
-.\xiaozhi-esp32-server\.conda\python.exe .\verify_asr_tts.py
+python .\scripts\verify_asr_tts.py
 ```
 
 验证输出包含：

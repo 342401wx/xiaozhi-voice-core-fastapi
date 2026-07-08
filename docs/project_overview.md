@@ -4,7 +4,7 @@
 
 小乐语音通话台是一个融合数字人前端、语音问答后端、企业知识库问答和用户隔离能力的智能语音助手项目。系统支持文字对话、录音上传、连续语音通话、ASR 语音识别、LLM 问答、TTS 语音合成、角色切换、用户注册登录、用户头像与资料设置、账号级聊天记忆隔离。
 
-当前项目以 `app.py` 作为前端与应用入口，通过 Gradio 构建可视化界面，并挂载 FastAPI 登录、注册、静态资源和接口路由。核心语音问答服务由 `小智ESP32提取/voice-core/fastapi_app.py` 提供，默认运行在 `8010` 端口。
+当前项目以 `app.py` 作为前端与应用入口，通过 Gradio 构建可视化界面，并挂载 FastAPI 登录、注册、静态资源和接口路由。核心语音问答服务位于 `services/voice_core/fastapi_app.py`，默认运行在 `8010` 端口。
 
 ## 2. 主要功能
 
@@ -30,12 +30,13 @@ flowchart LR
     User["用户浏览器"] --> Frontend["Gradio 前端界面<br/>app.py / 7860"]
     Frontend --> Auth["FastAPI 登录注册<br/>验证码 / Cookie 会话"]
     Frontend --> SQLite["SQLite 本地数据<br/>用户资料 / 聊天记忆"]
-    Frontend --> VoiceAPI["语音核心 FastAPI<br/>voice-core / 8010"]
+    Frontend --> VoiceAPI["语音核心服务<br/>services/voice_core / 8010"]
     VoiceAPI --> ASR["ASR 语音识别<br/>FunASR"]
-    VoiceAPI --> KB["企业服务知识库<br/>IT / HR / 行政 / 财务"]
+    VoiceAPI --> KB["企业服务知识库<br/>services/knowledge_base"]
     VoiceAPI --> LLM["大模型问答<br/>DeepSeek / OpenAI 兼容接口"]
     VoiceAPI --> TTS["TTS 语音合成<br/>EdgeTTS"]
-    Frontend --> Static["静态资源<br/>角色头像 / Live2D / 用户头像"]
+    Frontend --> Static["静态资源<br/>assets/web_static"]
+    Frontend --> DigitalHuman["数字人资源<br/>assets/digital_human"]
 ```
 
 ## 4. 目录说明
@@ -43,13 +44,15 @@ flowchart LR
 | 路径 | 说明 |
 |---|---|
 | `app.py` | Gradio 前端、FastAPI 登录注册、用户资料、记忆隔离和页面逻辑 |
-| `小智ESP32提取/voice-core/fastapi_app.py` | 语音核心 FastAPI 服务入口 |
-| `小智ESP32提取/voice-core/config.yaml` | 语音核心配置，包括 ASR、LLM、TTS 等模块 |
-| `a3_seachat_backend/enterprise_service_desk_knowledge_base.json` | 企业服务知识库数据 |
-| `static/avatars/` | 系统角色头像资源 |
-| `static/user_avatars/` | 用户上传头像目录，运行时生成，不上传 GitHub |
+| `services/voice_core/fastapi_app.py` | 语音核心 FastAPI 服务入口 |
+| `services/voice_core/config.yaml` | 语音核心配置，包括 ASR、LLM、TTS 等模块 |
+| `services/knowledge_base/enterprise_service_desk_knowledge_base.json` | 企业服务知识库数据 |
+| `assets/web_static/avatars/` | 系统角色头像资源 |
+| `assets/web_static/user_avatars/` | 用户上传头像目录，运行时生成，不上传 GitHub |
+| `assets/digital_human/` | 数字人 / Live2D 角色预览资源 |
+| `docs/` | 项目说明、部署接口文档和测试记录 |
+| `scripts/` | 本地验证脚本 |
 | `xiaole_users.sqlite3` | 本地用户数据库，运行时生成，不上传 GitHub |
-| `.gitignore` | 忽略 `.env`、数据库、日志、运行头像、模型文件等敏感或大文件 |
 
 ## 5. 数据存储
 
@@ -62,7 +65,7 @@ flowchart LR
 | `user_profiles` | 用户昵称、性别、生日、头像路径 |
 | `user_memory` | 用户聊天记忆，按账号和角色隔离 |
 
-密码不会明文保存，使用 PBKDF2-HMAC-SHA256 加盐哈希。`.env`、数据库文件和上传头像目录已加入 `.gitignore`，避免上传 GitHub。
+密码不会明文保存，使用 PBKDF2-HMAC-SHA256 加盐哈希。`.env`、数据库文件、日志、模型文件和上传头像目录不应上传到 GitHub。
 
 ## 6. 服务地址
 
@@ -79,7 +82,7 @@ flowchart LR
 
 ```powershell
 conda activate xiaozhi-voice-core
-cd "D:\桌面\zuoye\pbl作业\小智ESP32提取\voice-core"
+cd "D:\桌面\zuoye\pbl作业\services\voice_core"
 python -m uvicorn fastapi_app:app --host 127.0.0.1 --port 8010
 ```
 

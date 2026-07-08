@@ -1,6 +1,6 @@
-# 小乐语音核心提取包
+# 小乐语音核心服务
 
-这个目录是小乐语音助手使用的核心问答链路，来源于 `xiaozhi-esp32-server/main/xiaozhi-server` 的语音处理模块，方便后续单独阅读、改造或接入你自己的项目。
+这个目录是小乐语音助手使用的核心问答链路，按服务职责整理为 `services/voice_core`，用于承载 ASR、LLM、TTS、意图识别、工具调用和 FastAPI 接口。
 
 如果你要部署和运行 FastAPI 服务，请优先阅读 `README.md`。
 
@@ -21,7 +21,7 @@ WebSocket 连接 -> hello/listen 控制消息 -> Opus 音频流 -> VAD -> ASR ->
 - `core/handle/textHandler/listenMessageHandler.py`：处理 `listen start/stop/detect` 控制消息。
 - `core/handle/sendAudioHandle.py`：TTS 状态消息和 Opus 音频包回传。
 
-## 已提取模块
+## 核心模块
 
 - `core/providers/asr`：ASR 适配器，包括 FunASR、本地/云端 ASR 等。
 - `core/providers/tts`：TTS 适配器，包括 EdgeTTS、火山、阿里云、腾讯等。
@@ -49,7 +49,7 @@ WebSocket 连接 -> hello/listen 控制消息 -> Opus 音频流 -> VAD -> ASR ->
 - `LLM.DeepSeekLLM.api_key`
 - `TTS.EdgeTTS.voice`
 
-当前提取包更适合做源码拆解和二次改造。如果要让它独立运行，还需要补模型文件、依赖环境和私有配置。
+当前服务目录不包含本地私有模型和密钥。如果要让语音输入完整运行，还需要补模型文件、依赖环境和私有配置。
 
 ## FastAPI /ask 接口
 

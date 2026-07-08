@@ -9,10 +9,10 @@ from pathlib import Path
 import yaml
 
 
-ROOT = Path(__file__).resolve().parent
-SERVER_DIR = ROOT / "xiaozhi-esp32-server" / "main" / "xiaozhi-server"
-CONFIG_PATH = SERVER_DIR / "data" / ".config.yaml"
-OUT_DIR = ROOT / "output" / "asr_tts_verify"
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+SERVER_DIR = PROJECT_ROOT / "services" / "voice_core"
+CONFIG_PATH = SERVER_DIR / "config.yaml"
+OUT_DIR = PROJECT_ROOT / "runtime" / "asr_tts_verify"
 
 
 def load_config() -> dict:
